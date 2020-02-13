@@ -55,14 +55,14 @@ def landing():
 # @app.route("/api/predict",methods=["POST"])
 # def prediction_api():
 #     # if request.method == "POST":
-#     req_json = request.get_json()
-#     # print(req_json)
+#     predict_reqest = request.get_json()
+#     # print(predict_reqest)
 
-#     if req_json and "user_id" in req_json and "time_stamp" in req_json and "image_data" in req_json and "user_name" in req_json:
-#         user_id = req_json["user_id"]
-#         image_data = req_json["image_data"]
-#         time_stamp = req_json["time_stamp"]
-#         user_name = req_json["user_name"]
+#     if predict_reqest and "user_id" in predict_reqest and "time_stamp" in predict_reqest and "image_data" in predict_reqest and "user_name" in predict_reqest:
+#         user_id = predict_reqest["user_id"]
+#         image_data = predict_reqest["image_data"]
+#         time_stamp = predict_reqest["time_stamp"]
+#         user_name = predict_reqest["user_name"]
 #     else:
 #         return render_template("404.html")        
     
@@ -102,9 +102,9 @@ def prediction():
 
 @app.route("/api/register",methods=["POST"])
 def registration():
-    req_json = request.get_json()
-    if req_json:
-        new_user = req_json["user"]
+    predict_reqest = request.get_json()
+    if predict_reqest:
+        new_user = predict_reqest["user"]
         new_user_id = new_user["user-id"]
         print(new_user["email-id"])
         # print()
@@ -128,7 +128,7 @@ def registration():
             response = {"status":"Failed","message":"Invalid Request - User Id is already registered"}
             return jsonify(response)
     else:
-        print(req_json)
+        print(predict_reqest)
         return render_template("404.html")
 
 
@@ -195,63 +195,97 @@ def logging_in():
             response = {"status":"Failed","message":"User is not registered"}
             return jsonify(response)
     else:
-        # print(req_json)
+        # print(predict_reqest)
         response = {"status":"Failed","message":"Invalid Request"}
         return jsonify(response)
 
-# @app.route("/api/logout",methods=["POST"])
-# def logging_out():
-#     all_users = dict(db.child("users")).get().val()
+@app.route("/api/logout",methods=["POST"])
+def logging_out():
+    all_users = dict(db.child("users").get().val())
+    datetime_format = "%y-%m-%d %H:%M:%S"
+    input_creds = request.get_json()
+    if "user-id" in input_creds and "tokenId" in input_creds:
+        if input_creds['user-id'] in all_users.keys():
+            temp = all_users[input_creds['user-id']]
+            if input_creds["user-id"]==temp["user-id"]:
+                if "tokenId" in temp.keys() and temp["tokenId"] == input_creds["tokenId"]:                  
+                    current_time = datetime.today()
+                    saved_time_string = temp["time-stamp"]
+                    saved_time = datetime.strptime(saved_time_string,datetime_format)
+                    is_logged_in = checkTime(saved_time,current_time)
 
-#     input_request = request.get_json()
-#     if input_request:
-
-
-# @app.route("/api/predict",methods=["POST"])
-# def prediction_api():
-#     # if request.method == "POST":
-#     req_json = request.get_json()
-#     # print(req_json)
-
-#     if req_json and "user_id" in req_json and "time_stamp" in req_json and "image_data" in req_json and "user_name" in req_json:
-#         user_id = req_json["user_id"]
-#         image_data = req_json["image_data"]
-#         time_stamp = req_json["time_stamp"]
-#         user_name = req_json["user_name"]
-#     else:
-#         return render_template("404.html")        
-    
-#     firebase_data = {
-#         "user_name":user_name,
-#         "image_data":image_data
-#     }
-
-#     # recov_image_jpg = base64.decodestring(image_data)
-#     # f = open("temp.jpg","w")
-#     # f.write(recov_image_jpg)
-#     # f.close()
-
-#     output = {
-#         user_id:{
-#             time_stamp:[
-#                 firebase_data,
-#                 {
-#                     "val1":1,
-#                     "val2":2,
-#                     "val3":3,
-#                     "val4":4,
-#                     "val5":5,
-#                 }
-#             ]
-#         }
-#     }
-
-#     db.child(user_id).child(time_stamp).update(firebase_data)
-#     # storage.child(user_id).child(time_stamp).child("temp1.jpg").put("temp.jpg")
-#     return jsonify(output)
+                    if is_logged_in:
+                        response = {"status":"Success","message":"User has been logged out."}
+                        current_user = all_users[input_creds["user-id"]]
+                        db.child("users").child(current_user["user-id"]).remove()
+                        del current_user["tokenId"]
+                        del current_user["time-stamp"]                        
+                        db.child("users").child(current_user["user-id"]).update(current_user)
+                        return jsonify(response)
+                    else:
+                        response = {"status":"Failed","message":"User is not currently logged in"}
+                        return jsonify(response)  
+                else:
+                    response = {"status":"Failed","message":"User is not currently logged in"}
+                    return jsonify(response) 
+            else:
+                response = {"status":"Failed","message":"Invalid User-Id"}
+                return jsonify(response)    
+        else:
+            response = {"status":"Failed","message":"User is not registered"}
+            return jsonify(response)
+    else:
+        response = {"status":"Failed","message":"Invalid Request"}
+        return jsonify(response)
 
 
-# @app.route()
+@app.route("/api/predict",methods=["POST"])
+def prediction_api():
+    all_users = dict(db.child("users").get().val())
+    datetime_format = "%y-%m-%d %H:%M:%S"
+    current_time = datetime.today()
+    current_time_string = current_time.strftime(datetime_format)
+
+    predict_reqest = request.get_json()
+    if predict_reqest and "user-id" in predict_reqest and "tokenId" in predict_reqest and "image-data" in predict_reqest and "user-name" in predict_reqest:
+        user_id = predict_reqest["user-id"]
+        image_data = predict_reqest["image-data"]
+        time_stamp = current_time_string
+        user_name = predict_reqest["user-name"]
+        tokenId = predict_reqest["tokenId"]
+        # output = ml_predict(image_data)
+        if user_id in all_users:
+            current_user = all_users[user_id]
+            if "tokenId" in current_user and current_user["tokenId"]==tokenId:
+                # output = ml_predict(image_data)
+                json_response = {
+                    "results" : {
+                        "val1":1,
+                        "val2":2,
+                        "val3":3,
+                        "val4":4,
+                        "val5":5,
+                    },
+                    "status":"Success",
+                    "message":"For the given image following are the results"
+                }
+
+                firebase_data = {
+                    "user_name":user_name,
+                    "image_data":image_data
+                }
+                db.child("Predictions").child(user_id).child(time_stamp).update(firebase_data)
+
+                return jsonify(json_response)
+            else:
+                response = {"status":"Failed","message":"User not logged in or invalid token. Try logging in again"}
+                return jsonify(response)
+        else:
+            response = {"status":"Failed","message":"User not found"}
+            return jsonify(response)
+    else:
+        response = {"status":"Failed","message":"Invalid Request"}
+        return jsonify(response)        
 
 if __name__ == "__main__":
     app.run(port = 4568,debug=True)
