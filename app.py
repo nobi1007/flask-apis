@@ -51,50 +51,7 @@ app = Flask(__name__)
 @app.route("/index")
 def landing():
     return render_template("landing.html")
-
-# @app.route("/api/predict",methods=["POST"])
-# def prediction_api():
-#     # if request.method == "POST":
-#     predict_reqest = request.get_json()
-#     # print(predict_reqest)
-
-#     if predict_reqest and "user_id" in predict_reqest and "time_stamp" in predict_reqest and "image_data" in predict_reqest and "user_name" in predict_reqest:
-#         user_id = predict_reqest["user_id"]
-#         image_data = predict_reqest["image_data"]
-#         time_stamp = predict_reqest["time_stamp"]
-#         user_name = predict_reqest["user_name"]
-#     else:
-#         return render_template("404.html")        
-    
-#     firebase_data = {
-#         "user_name":user_name,
-#         "image_data":image_data
-#     }
-
-#     # recov_image_jpg = base64.decodestring(image_data)
-#     # f = open("temp.jpg","w")
-#     # f.write(recov_image_jpg)
-#     # f.close()
-
-#     output = {
-#         user_id:{
-#             time_stamp:[
-#                 firebase_data,
-#                 {
-#                     "val1":1,
-#                     "val2":2,
-#                     "val3":3,
-#                     "val4":4,
-#                     "val5":5,
-#                 }
-#             ]
-#         }
-#     }
-
-#     db.child(user_id).child(time_stamp).update(firebase_data)
-#     # storage.child(user_id).child(time_stamp).child("temp1.jpg").put("temp.jpg")
-#     return jsonify(output)
-    
+ 
 @app.route("/predict",methods=["GET"])
 def prediction():
     return render_template("prediction_main.html")
