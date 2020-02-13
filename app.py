@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, abort
 from firebase import Firebase
 from random import randint
+from datetime import datetime
 # import base64
 literals = "ABCDDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*=':;,.+-"
 def get_token():
@@ -24,6 +25,12 @@ def get_token():
         token += mixed_literals[i]
     return token
 
+def checkTime(d1,d2):
+    t = d2-d1
+    t_val = int(t.total_seconds())
+    if t_val > 10800: # three hours = 10800 sec
+        return False
+    return True
 
 config = {
   "apiKey": "AIzaSyArL9WuBVYY04Nmt519xi08wnF6muZDIao",
@@ -146,19 +153,41 @@ def user_details(username):
         response["Message"] = "Requested user not found"
         return jsonify(response)
 
+
 @app.route("/api/login",methods=["POST"])
 def logging_in():
     all_users = dict(db.child("users").get().val())
+    datetime_format = "%y-%m-%d %H:%M:%S"
 
     input_creds = request.get_json()
+
     if input_creds:
         if input_creds['user-id'] in all_users.keys():
             temp = all_users[input_creds['user-id']]
             if input_creds["user-id"]==temp["user-id"] and input_creds["password"] == temp["password"]:
-                tokenId = get_token()
-                response = {"status":"Success","tokenId":tokenId,"message":"tokenId will be refreshed in every two hours."}
-                db.child("users").child(input_creds["user-id"]).update({"tokenId":tokenId})
-                return jsonify(response)    # the auth token recieved here has to be saved in shared preference.
+                if "time-stamp" in temp.keys():
+                    current_time = datetime.today()
+                    
+                    saved_time_string = temp["time-stamp"]
+                    saved_time = datetime.strptime(saved_time_string,datetime_format)
+
+                    is_logged_in = checkTime(saved_time,current_time)
+                    if is_logged_in:
+                        response = {"status":"Success","message":"User is already logged in"}
+                        return jsonify(response)
+                    else:
+                        current_time_string = current_time.strftime(datetime_format)
+                        tokenId = get_token()
+                        response = {"status":"Success","tokenId":tokenId,"message":"tokenId will be refreshed in every three hours"}
+                        db.child("users").child(input_creds["user-id"]).update({"tokenId":tokenId,"time-stamp":current_time_string})
+                        return jsonify(response)    # the auth token recieved here has to be saved in shared preference.
+                else:
+                    current_time = datetime.today()
+                    current_time_string = current_time.strftime(datetime_format)
+                    tokenId = get_token()
+                    response = {"status":"Success","tokenId":tokenId,"message":"tokenId will be refreshed in every three hours"}
+                    db.child("users").child(input_creds["user-id"]).update({"tokenId":tokenId,"time-stamp":current_time_string})
+                    return jsonify(response)    # the auth token recieved here has to be saved in shared preference.
             else:
                 response = {"status":"Failed","message":"Either user-id or password is incorrect"}
                 return jsonify(response)    
@@ -170,56 +199,56 @@ def logging_in():
         response = {"status":"Failed","message":"Invalid Request"}
         return jsonify(response)
 
-@app.route("/api/logout",methods=["POST"])
-def logging_out():
-    all_users = dict(db.child("users")).get().val()
+# @app.route("/api/logout",methods=["POST"])
+# def logging_out():
+#     all_users = dict(db.child("users")).get().val()
 
-    input_request = request.get_json()
-    if input_request:
+#     input_request = request.get_json()
+#     if input_request:
 
 
-@app.route("/api/predict",methods=["POST"])
-def prediction_api():
-    # if request.method == "POST":
-    req_json = request.get_json()
-    # print(req_json)
+# @app.route("/api/predict",methods=["POST"])
+# def prediction_api():
+#     # if request.method == "POST":
+#     req_json = request.get_json()
+#     # print(req_json)
 
-    if req_json and "user_id" in req_json and "time_stamp" in req_json and "image_data" in req_json and "user_name" in req_json:
-        user_id = req_json["user_id"]
-        image_data = req_json["image_data"]
-        time_stamp = req_json["time_stamp"]
-        user_name = req_json["user_name"]
-    else:
-        return render_template("404.html")        
+#     if req_json and "user_id" in req_json and "time_stamp" in req_json and "image_data" in req_json and "user_name" in req_json:
+#         user_id = req_json["user_id"]
+#         image_data = req_json["image_data"]
+#         time_stamp = req_json["time_stamp"]
+#         user_name = req_json["user_name"]
+#     else:
+#         return render_template("404.html")        
     
-    firebase_data = {
-        "user_name":user_name,
-        "image_data":image_data
-    }
+#     firebase_data = {
+#         "user_name":user_name,
+#         "image_data":image_data
+#     }
 
-    # recov_image_jpg = base64.decodestring(image_data)
-    # f = open("temp.jpg","w")
-    # f.write(recov_image_jpg)
-    # f.close()
+#     # recov_image_jpg = base64.decodestring(image_data)
+#     # f = open("temp.jpg","w")
+#     # f.write(recov_image_jpg)
+#     # f.close()
 
-    output = {
-        user_id:{
-            time_stamp:[
-                firebase_data,
-                {
-                    "val1":1,
-                    "val2":2,
-                    "val3":3,
-                    "val4":4,
-                    "val5":5,
-                }
-            ]
-        }
-    }
+#     output = {
+#         user_id:{
+#             time_stamp:[
+#                 firebase_data,
+#                 {
+#                     "val1":1,
+#                     "val2":2,
+#                     "val3":3,
+#                     "val4":4,
+#                     "val5":5,
+#                 }
+#             ]
+#         }
+#     }
 
-    db.child(user_id).child(time_stamp).update(firebase_data)
-    # storage.child(user_id).child(time_stamp).child("temp1.jpg").put("temp.jpg")
-    return jsonify(output)
+#     db.child(user_id).child(time_stamp).update(firebase_data)
+#     # storage.child(user_id).child(time_stamp).child("temp1.jpg").put("temp.jpg")
+#     return jsonify(output)
 
 
 # @app.route()
