@@ -32,6 +32,9 @@ def checkTime(d1,d2):
         return False
     return True
 
+def ml_predict(image):
+    pass
+
 config = {
   "apiKey": "AIzaSyArL9WuBVYY04Nmt519xi08wnF6muZDIao",
   "authDomain": "skin-cancer-detection-e1c4c.firebaseapp.com",
