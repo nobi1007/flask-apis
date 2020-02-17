@@ -2,6 +2,21 @@ from flask import Flask, render_template, request, jsonify, abort
 from firebase import Firebase
 from random import randint
 from datetime import datetime
+
+#added some more libs
+import base64
+import numpy as np
+import io
+from PIL import Image
+import tensorflow as tf
+from tensorflow import keras
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+from tensorflow.keras import backend as K
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import  ImageDataGenerator,img_to_array
+
 # import base64
 literals = "ABCDDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*=':;,.+-"
 def get_token():
@@ -31,10 +46,54 @@ def checkTime(d1,d2):
     if t_val > 10800: # three hours = 10800 sec
         return False
     return True
-
+"""
 def ml_predict(image):
-    pass
-
+    pass"""
+#################################################################################################################
+def get_model():
+    global model
+    print("Loading MobileNet Model...")
+    model=load_model('model_good_testing_Acc_84.h5')
+    print(model)
+    print("Model Loaded!")
+def preprocess_image(image,target_size):
+    if image.mode!="RGB":
+        image=imae.convert("RGB")
+    image=image.resize(target_size)
+    image=img_to_array(image)
+    image=np.expand_dims(image,axis=0)
+    image = np.vstack([image])
+    print(image)
+    return image
+get_model()
+@app.route("/")
+def startWeb():
+    return render_template('predict.html')
+@app.route("/predict",methods=["POST"])
+def predict():
+    message=request.get_json(force=True)
+    encoded=message['image']
+    decoded=base64.b64decode(encoded)
+    image=Image.open(io.BytesIO(decoded))
+    processed_image=preprocess_image(image,target_size=(224,224))
+    print(model)
+    graph = tf.get_default_graph()
+    print(model)
+    with graph.as_default():
+        prediction=model.predict(processed_image)
+        print(prediction)
+    response={
+        'prediction':{
+            'akiec':str(prediction[0][0]),
+            'bcc':str(prediction[0][1]),
+            'bkl':str(prediction[0][2]),
+            'df':str(prediction[0][3]),
+            'mel':str(prediction[0][4]),
+            'nv':str(prediction[0][5]),
+            'vasc':str(prediction[0][6]),
+    }}
+    return jsonify(response)
+################################################################################################################
 config = {
   "apiKey": "AIzaSyArL9WuBVYY04Nmt519xi08wnF6muZDIao",
   "authDomain": "skin-cancer-detection-e1c4c.firebaseapp.com",
