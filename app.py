@@ -109,11 +109,10 @@ storage = firebase.storage()
 
 app = Flask(__name__)
 
+# def landing():
+#     return render_template("landing.html")
 @app.route("/")
-@app.route("/index")
-def landing():
-    return render_template("landing.html")
- 
+@app.route("/index") 
 @app.route("/predict",methods=["GET"])
 def prediction():
     return render_template("prediction_main.html")
