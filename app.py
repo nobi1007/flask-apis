@@ -4,18 +4,18 @@ from random import randint
 from datetime import datetime
 
 #added some more libs
-import base64
-import numpy as np
-import io
-from PIL import Image
-import tensorflow as tf
-from tensorflow import keras
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
-from tensorflow.keras import backend as K
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import  ImageDataGenerator,img_to_array
+# import base64
+# import numpy as np
+# import io
+# # from PIL import Image
+# import tensorflow as tf
+# from tensorflow import keras
+# from tkinter import Tk
+# from tkinter.filedialog import askopenfilename
+# from tensorflow.keras import backend as K
+# from tensorflow.keras.models import Sequential
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.preprocessing.image import  ImageDataGenerator,img_to_array
 
 # import base64
 literals = "ABCDDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*=':;,.+-"
