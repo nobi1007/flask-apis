@@ -92,59 +92,7 @@
     </main>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    
-    <script>
-        $(document).ready(function () {
-
-            $("#image-selector").change(function () {
-                let reader = new FileReader();
-                reader.onload = function () {
-                    let dataURL = reader.result;
-
-                    $("#selected-image").attr("src", dataURL);
-                    //$.sessionStorage.setItem("URLS",dataURL);
-                    $("#prediction-list").empty();
-                }
-                let file = $("#image-selector").prop("files")[0];
-                reader.readAsDataURL(file);
-                console.log(file);
-            });
-
-            $("#predict-button").click(function () {
-                let image = $("#selected-image").get(0);
-                console.log(image.src);
-                console.log(typeof(image.src));
-                const url = 'http://127.0.0.1:4568/api/predict';
-
-                // post body data
-                var date_time = new Date();
-                time_stamp = date_time.getDate()+"-"+date_time.getMonth()+"-"+date_time.getFullYear()+"_"+date_time.getHours()+":"+date_time.getMinutes()+":"+date_time.getSeconds();
-                
-                const user = {
-                    user_id: "user1",
-                    user_name: "Shya",
-                    image_data: image.src,
-                    time_stamp: time_stamp
-                };
-
-                // create request object
-                const request = new Request(url, {
-                    method: 'POST',
-                    body: JSON.stringify(user),
-                    headers: new Headers({
-                        'Content-Type': 'application/json'
-                    })
-                });
-
-                // pass request object to `fetch()`
-                fetch(request)
-                    .then(res => res.json())
-                    .then(res => console.log(res));
-            });
-
-        });
-    </script>
-        
+            
         <script>
             $("#image-selector").change(function () {
     let reader = new FileReader();
